@@ -1,0 +1,31 @@
+/*
+ * StackImplementation.h
+ *
+ *  Created on: Oct 19, 2018
+ *      Author: aleksa
+ */
+
+#ifndef STACKIMPLEMENTATION_H_
+#define STACKIMPLEMENTATION_H_
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <inttypes.h>
+#include <stdbool.h>
+
+#define DATA int_least16_t
+
+typedef struct node
+{
+	DATA data;
+	struct node* next;
+
+}NODE;
+
+void initStack (NODE** stackTop);
+NODE* pushToStack (NODE* stackTop, DATA data);
+NODE* popFromStack (NODE* stackTop, DATA* data);
+bool isStackEmpty (NODE* stackTop);
+void dumpStack (NODE* stackTop);
+
+#endif /* STACKIMPLEMENTATION_H_ */

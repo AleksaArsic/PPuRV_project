@@ -1,0 +1,139 @@
+/*
+ * ImageProcessing.c
+ *
+ *  Created on: Oct 20, 2018
+ *      Author: aleksa
+ */
+
+#include "ImageProcessing.h"
+
+uint32_t MATRIX_WIDTH = 16;
+uint32_t MATRIX_HEIGHT = 16;
+
+uint8_t* pixelsToBoolean (int8_t* filename)
+{
+
+	uint8_t* outputData = (uint8_t*) malloc(MATRIX_WIDTH * MATRIX_HEIGHT);
+	uint32_t i;
+	uint32_t j;
+	uint32_t m = 0;
+
+	BITMAPFILEHEADER bmapFileHeader;
+	BITMAPINFOHEADER bmapInfoHeader;
+	uint8_t* bitmapData;
+
+	outputData[0] = 0;
+
+	if(!checkFileExtension(filename, BMP_E))
+		return NULL;
+
+	/* Loading bitmap*/
+	bitmapData = (uint8_t*) malloc(MATRIX_WIDTH * MATRIX_HEIGHT);
+	bitmapData = LoadBitmapFile(filename, &bmapFileHeader, &bmapInfoHeader);
+
+	if(!bitmapData)
+		return NULL;
+
+	printf("Bitmap %s loaded.\n\n", filename);
+
+	for (i = 0; i < MATRIX_WIDTH * MATRIX_HEIGHT * 3; i+=3)
+	{
+
+		for (j = 0; j < 3; j++)
+		{
+			outputData[m] += bitmapData[j + i];
+		}
+		m++;
+	}
+
+	for (i = 0; i < MATRIX_WIDTH * MATRIX_HEIGHT; i++)
+	{
+		if (outputData[i] >= 127)
+			outputData[i] = '1';
+		else
+			outputData[i] = '0';
+	}
+
+	return outputData;
+}
+
+uint8_t* readMatrixFromFile (int8_t* filename)
+{
+
+	FILE* fp = NULL;
+	uint8_t* retMatrix = (uint8_t*) malloc(MATRIX_WIDTH * MATRIX_HEIGHT);
+	uint8_t temp[MATRIX_WIDTH + 2];
+	int32_t i;
+	int32_t j;
+
+	retMatrix[0] = 0;
+	temp[0] = 0;
+
+	if(!checkFileExtension(filename, TXT_E))
+		return NULL;
+
+	fp = fopen(filename, "r");
+
+	if (fp == NULL)
+		return NULL;
+
+	j = 0;
+	while ((fgets(temp, MATRIX_WIDTH + 2, fp)) != NULL)
+	{
+			for (i = 0; i < MATRIX_WIDTH; i++){
+			if(*temp == '\n' || *temp == 0) break;
+			if (temp[i] == '0' || temp[i] == '1')
+			{
+				retMatrix[j++] = temp[i];
+			}
+		}
+
+
+	}
+
+	fclose(fp);
+
+	return retMatrix;
+}
+
+void dumpMatrix(uint8_t* matrix){
+
+	int32_t i;
+
+	printf("*********************** MATRIX DUMP: ***********************");
+
+	for (i = 0; i < MATRIX_WIDTH * MATRIX_HEIGHT; i++)
+	{
+		if ((i % MATRIX_WIDTH) == 0) printf("\n");
+		printf("%c", matrix[i]);
+	}
+
+	printf("\n");
+}
+
+bool checkFileExtension (int8_t* filename, int8_t* extension)
+{
+
+	int32_t i;
+	int32_t j;
+
+	i = 2;
+	j = strlen(filename) - 1;
+	uint8_t fileExtension[3];
+	while (filename[j] != '.')
+	{
+		fileExtension[i--] = filename[j--];
+	}
+
+	if (strcmp(fileExtension, extension))
+		return false;
+
+	return true;
+}
+
+void matrixDimensionsParser(int8_t* iWidth, int8_t* iHeight){
+
+	MATRIX_WIDTH = strtol(iWidth, NULL, 10);
+	MATRIX_HEIGHT = strtol(iHeight, NULL, 10);
+
+}

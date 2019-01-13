@@ -1,0 +1,176 @@
+/*
+ ============================================================================
+ Name        : main.c
+ Author      : Aleksa Arsic
+ Version     : 1.0
+ Copyright   : Notice
+ Description : PPuRV project 36 in C, Ansi-style
+ ============================================================================
+ */
+
+
+#ifdef __GNUC__
+
+#include <dlfcn.h>
+
+#endif
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <inttypes.h>
+#include "StackImplementation.h"
+#include "ImageProcessing.h"
+#include "bmp.h"
+
+#define __ARG_NUM__ 7
+#define ARG_STRING "INPUT_FILE OPTION WIDTH HEIGHT X_COORD Y_COORD"
+/*
+ * ARGUMENTS: FILE OPTION WIDTH HEIGHT X_COORD Y_COORD
+ *
+ * FILE: Input file
+ * OPTION: Is it .bmp or .txt format of file
+ * WIDTH: Matrix width
+ * HEIGHT: Matrix height
+ * X_COORD: Index of column for the starting point
+ * Y_COORD: Index of row for the starting point
+ */
+
+
+int main(int argc, char* argv[]) {
+
+	/* Arguments variables*/
+	int32_t option;
+
+	/* Stack variables */
+	NODE* top;
+	DATA topValue;
+	bool empty;
+	bool checkPoint;
+
+	/* Function pointer array to ImageProcessing.h functions */
+	uint8_t* (*proccesingPtr[2])(char*) = {pixelsToBoolean, readMatrixFromFile};
+
+	/* Shared library function pointers */
+	void* handle;
+	void (*initS)(NODE**);
+	NODE* (*push)(NODE*, DATA);
+	NODE* (*pop)(NODE*, DATA*);
+	void (*dumpS)(NODE*);
+	bool (*isEmpty)(NODE*);
+	char* error;
+
+	/* Bitmap reader and file reader variables */
+	uint8_t* booleanMatrix;
+
+	if (argc != __ARG_NUM__)
+	{
+		printf("Enter valid arguments. \n");
+		printf(ARG_STRING);
+		return EXIT_FAILURE;
+	}
+
+	/* .txt or .bmp ? */
+	option = (int32_t) strtol(argv[2], NULL, 10);
+
+	/* Parse matrix dimensions */
+	checkPoint = matrixDimensionsParser(argv[3], argv[4]);
+
+	/* Check validity of dimensions */
+	if (!checkPoint)
+	{
+		printf("Matrix dimensions can not be negative and should be greater than zero.");
+		return EXIT_FAILURE;
+	}
+
+	/* Get coordinates from arguments */
+	checkPoint = getCoordinates(argv[5], argv[6]);
+
+	/* Check validity of coordinates */
+	if (!checkPoint)
+	{
+		printf("Coordinates (%d, %d) are not valid.\n", MATRIX_X, MATRIX_Y);
+		return EXIT_FAILURE;
+	}
+
+	/* pixels to boolean matrix*/
+	booleanMatrix = (uint8_t*) malloc(MATRIX_WIDTH * MATRIX_HEIGHT);
+	booleanMatrix = (*proccesingPtr[option])( argv[1]);
+
+	if (booleanMatrix == NULL)
+	{
+		if (option == 0)
+			printf("Error! Can't open input bitmap file: %s\n", argv[1]);
+		if (option == 1)
+			printf("Error! Can't open input text file: %s\n", argv[1]);
+		return EXIT_FAILURE;
+	}
+
+	/* Dump matrix */
+	dumpMatrix(booleanMatrix);
+
+	printf("\nStarting position: (%d, %d)\n", MATRIX_X, MATRIX_Y);
+
+	/* initialization of shared library functions */
+	handle = dlopen("libstack_implementation.so", RTLD_LAZY);
+	if (handle == NULL)
+	{
+		fputs(dlerror(), stderr);
+		exit(1);
+	}
+
+	initS = dlsym(handle, "initStack");
+	push = dlsym(handle, "pushToStack");
+	pop = dlsym(handle, "popFromStack");
+	dumpS = dlsym(handle, "dumpStack");
+	isEmpty = dlsym(handle, "isStackEmpty");
+
+	if ((error = dlerror()) != NULL)
+	{
+		fputs(error, stderr);
+		exit(1);
+	}
+
+
+	findNeighbours(booleanMatrix);
+
+
+	/* Initialize stack */
+	(*initS)(&top);
+
+	DATA d1;
+	DATA d2;
+	DATA d3;
+
+//	d1.x_coord = 1;
+//	d1.y_coord = 2;
+//
+//	d2.x_coord = 3;
+//	d2.y_coord = 4;
+//
+//	d3.x_coord = 5;
+//	d3.y_coord = 7;
+
+	/* Push to stack dummy data */
+	top = (*push)(top, d1);
+	top = (*push)(top, d2);
+	top = (*push)(top, d3);
+
+	/* Check if stack is empty */
+	empty = (*isEmpty)(top);
+	printf("\nStack empty (boolean): %d\n", empty);
+
+	/* Print stack */
+	printf("\nStack dump: \n");
+	(*dumpS)(top);
+
+	/* Pop first element from stack */
+	top = (*pop)(top, &topValue);
+
+//	printf("\nPop from stack: (%d, %d)\n", topValue.x_coord, topValue.y_coord);
+
+	/* Print stack */
+	printf("\nStack dump: \n");
+	(*dumpS)(top);
+
+	return EXIT_SUCCESS;
+}

@@ -1,0 +1,36 @@
+/*
+ * StackImplementation.h
+ *
+ *  Created on: Oct 19, 2018
+ *      Author: aleksa
+ */
+
+#ifndef STACKIMPLEMENTATION_H_
+#define STACKIMPLEMENTATION_H_
+
+#include <stdlib.h>
+#include <inttypes.h>
+#include <stdbool.h>
+
+/* Stack data structure */
+struct s_data
+{
+	int32_t x_coord;
+	int32_t y_coord;
+};
+
+/* Stack node */
+struct node
+{
+	struct s_data data;
+	struct node* next;
+
+};
+
+void initStack (struct node** stackTop);
+struct node* pushToStack (struct node* stackTop, struct s_data iData);
+struct node* popFromStack (struct node* stackTop, struct s_data* oData);
+bool isStackEmpty (struct node* stackTop);
+void dumpStack (struct node* stackTop);
+
+#endif /* STACKIMPLEMENTATION_H_ */

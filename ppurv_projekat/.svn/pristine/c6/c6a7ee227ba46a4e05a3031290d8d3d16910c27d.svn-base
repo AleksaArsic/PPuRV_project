@@ -1,0 +1,257 @@
+/*
+ * ImageProcessing.c
+ *
+ *  Created on: Oct 20, 2018
+ *      Author: aleksa
+ */
+
+#include "ImageProcessing.h"
+
+int32_t MATRIX_WIDTH = 16;
+int32_t MATRIX_HEIGHT = 16;
+
+int32_t MATRIX_X = 0;
+int32_t MATRIX_Y = 0;
+
+uint8_t FIND_VALUE = 1;
+
+/*
+ * (MISRA-C:2004 5.7/A) No identifier name should be reused ("i")
+ * (MISRA-C:2004 5.7/A) No identifier name should be reused ("j")
+ *
+ * promenjive se nalaze u razlicitim scope-ovima
+ */
+
+uint8_t* pixelsToBoolean (char* filename)
+{
+
+	/*
+	 * MISRA C: 20.4/R Violated - malloc should not be used
+	 * zbog funkcionalnosti bmp.h
+	 * kada se koristi staticki niz -> "error: assignment to expression with array type error"
+	 * staticki niz nije dodeljiv
+	 */
+	uint8_t* outputData = (uint8_t*) malloc(MATRIX_WIDTH * MATRIX_HEIGHT);
+	uint32_t i;
+	uint32_t j;
+	uint32_t m = 0;
+
+
+	BITMAPFILEHEADER bmapFileHeader;
+	BITMAPINFOHEADER bmapInfoHeader;
+	uint8_t* bitmapData;
+
+	/* MISRA-C:2004 17.4/R) Array indexing shall be the only allowed form of pointer arithmetic
+	 * ne vidim u cemu je problem
+	 */
+	outputData[0] = 0;
+
+	/*
+	 * (MISRA-C:2004 14.7/R) A function shall have a single point of exit at the end of the function
+	 * potreban izlaz na vise mesta
+	 */
+	if (checkFileExtension(filename, BMP_E) == 0)
+	{
+		return NULL;
+	}
+
+	/*
+	 * MISRA C: 20.4/R Violated - malloc should not be used
+	 * zbog funkcionalnosti bmp.h
+	 * kada se koristi staticki niz -> "error: assignment to expression with array type error"
+	 * staticki niz nije dodeljiv
+	 */
+	/* Loading bitmap*/
+	bitmapData = (uint8_t*) malloc(MATRIX_WIDTH * MATRIX_HEIGHT);
+	bitmapData = LoadBitmapFile(filename, &bmapFileHeader, &bmapInfoHeader);
+
+	if (!bitmapData)
+	{
+		return NULL;
+	}
+
+	printf("Bitmap %s loaded.\n\n", filename);
+
+	for (i = 0; i < (MATRIX_WIDTH * MATRIX_HEIGHT * 3); i+=3)
+	{
+
+		for (j = 0; j < 3; j++)
+		{
+			/*
+			 * MISRA-C:2004 17.4/R) Array indexing shall be the only allowed form of pointer arithmetic
+			 * smatram da je izraz uredu
+			 */
+			outputData[m] += bitmapData[j + i];
+		}
+		m++;
+	}
+
+	for (i = 0; i < (MATRIX_WIDTH * MATRIX_HEIGHT); i++)
+	{
+		/*
+		 * MISRA-C:2004 17.4/R) Array indexing shall be the only allowed form of pointer arithmetic
+		 * smatram da je izraz uredu
+		 */
+
+		/*
+		 * (MISRA-C:2004 6.2/R) signed and unsigned
+		 * char type shall be used only for the storage and use of numeric values
+		 * TREBA POGLEDATI NA STA SVE UTICE PROMENA
+		 */
+		if (outputData[i] >= 127)
+		{
+			outputData[i] = 49;
+		}
+		else
+		{
+			outputData[i] = 48;
+		}
+	}
+
+	return outputData;
+}
+
+uint8_t* readMatrixFromFile (char* filename)
+{
+
+	FILE* fp = NULL;
+
+	/*
+	 * (MISRA-C:2004 20.4/R) Dynamic heap memory allocation shall not be used ("malloc")
+	 *
+	 */
+	uint8_t* retMatrix = (uint8_t*) malloc(MATRIX_WIDTH * MATRIX_HEIGHT);
+
+	/*
+	 * error: expression must have a constant value
+	 * zbog implementacije nije moguce postaviti konstantnu vrednost
+	 */
+	char temp[MATRIX_WIDTH + 2];
+	int32_t i;
+	int32_t j;
+
+	/*
+	 * MISRA-C:2004 17.4/R) Array indexing shall be the only allowed form of pointer arithmetic
+	 * smatram da su izrazi uredu
+	 */
+	retMatrix[0] = 0;
+	temp[0] = 0;
+
+	if (!checkFileExtension(filename, TXT_E))
+	{
+		return NULL;
+	}
+
+	fp = fopen((char*)filename, "r");
+
+	if (fp == NULL)
+	{
+		return NULL;
+	}
+
+	j = 0;
+	while ((fgets(temp, MATRIX_WIDTH + 2, fp)) != NULL)
+	{
+			for (i = 0; i < MATRIX_WIDTH; i++){
+			if (*temp == '\n' || *temp == 0)
+			{
+				break;
+			}
+			if (temp[i] == 48 || temp[i] == 49)
+			{
+				retMatrix[j] = temp[i];
+				j++;
+			}
+		}
+
+
+	}
+
+	fclose(fp);
+
+	return retMatrix;
+}
+
+void dumpMatrix(uint8_t* matrix){
+
+	int32_t i;
+
+	printf("*********************** MATRIX DUMP: ***********************");
+
+	for (i = 0; i < (MATRIX_WIDTH * MATRIX_HEIGHT); i++)
+	{
+		if ((i % MATRIX_WIDTH) == 0)
+		{
+			printf("\n");
+		}
+		printf("%c ", matrix[i]);
+	}
+
+	printf("\n");
+}
+
+bool checkFileExtension (char* filename, char* extension)
+{
+
+	int32_t i;
+	int32_t j;
+
+	i = 2;
+	j = strlen(filename) - 1;
+	char fileExtension[3];
+	while (filename[j] != '.')
+	{
+		fileExtension[i] = filename[j];
+		i--;
+		j--;
+	}
+
+	if (strcmp(fileExtension, extension))
+	{
+		return false;
+	}
+
+	return true;
+}
+
+bool matrixDimensionsParser (char* iWidth, char* iHeight)
+{
+
+	int32_t tempW = strtol(iWidth, NULL, 10);
+	int32_t tempH = strtol(iHeight, NULL, 10);
+
+	if (tempW <= 0 || tempH <= 0)
+	{
+		return false;
+	}
+
+	MATRIX_WIDTH = tempW;
+	MATRIX_HEIGHT = tempH;
+
+	return true;
+}
+
+bool getCoordinates (const char* X, const char* Y)
+{
+
+	MATRIX_X = strtol(X, NULL, 10);
+	MATRIX_Y = strtol(Y, NULL, 10);
+
+	if ((MATRIX_X > MATRIX_WIDTH || MATRIX_X < 0)
+			|| (MATRIX_Y > MATRIX_HEIGHT || MATRIX_Y < 0))
+	{
+		return false;
+	}
+
+	return true;
+}
+
+void findNeighbours (uint8_t* matrix)
+{
+	FIND_VALUE = matrix[MATRIX_WIDTH * (MATRIX_Y - 1) + (MATRIX_X - 1)];
+	printf("Value for which we are searching for equal neighbours: %c\n", FIND_VALUE);
+
+
+
+}
+

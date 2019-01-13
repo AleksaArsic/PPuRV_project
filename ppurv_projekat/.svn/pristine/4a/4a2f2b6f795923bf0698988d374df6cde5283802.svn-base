@@ -1,0 +1,18 @@
+/*
+ * ImageProcessing.h
+ *
+ *  Created on: Oct 20, 2018
+ *      Author: aleksa
+ */
+
+#ifndef IMAGEPROCESSING_H_
+#define IMAGEPROCESSING_H_
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <inttypes.h>
+#include "bmp.h"
+
+uint_least8_t* pixelsToBoolean (uint_least8_t* bitMapInput, uint_least16_t iWidth, uint_least16_t iHeight);
+
+#endif /* IMAGEPROCESSING_H_ */

@@ -1,0 +1,46 @@
+/*
+ ============================================================================
+ Name        : ppurv_projekat.c
+ Author      : Aleksa Arsic
+ Version     :
+ Copyright   : Notice
+ Description : Hello World in C, Ansi-style
+ ============================================================================
+ */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include "StackImplementation.h"
+
+int main(void) {
+
+	NODE* top;
+
+	/* Initialize stack */
+	initStack(&top);
+
+	/* Push to stack dummy data */
+	top = pushToStack(top, 1);
+	top = pushToStack(top, 2);
+	top = pushToStack(top, 3);
+
+	/* Check if stack is empty */
+	bool empty = isStackEmpty(top);
+	printf("Stack empty (boolean): %d\n", empty);
+
+	/* Print stack */
+	printf("Stack dump: \n");
+	dumpStack(top);
+
+	/* Pop from stack */
+	DATA topValue;
+	top = popFromStack(top, &topValue);
+
+	printf("\nPop from stack: %d\n", topValue);
+
+	/* Print stack */
+	printf("\nStack dump: \n");
+	dumpStack(top);
+
+	return EXIT_SUCCESS;
+}

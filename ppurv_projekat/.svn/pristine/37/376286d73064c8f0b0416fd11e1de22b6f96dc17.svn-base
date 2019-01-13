@@ -1,0 +1,123 @@
+/*
+ ============================================================================
+ Name        : main.c
+ Author      : Aleksa Arsic
+ Version     : 1.0
+ Copyright   : Notice
+ Description : Hello World in C, Ansi-style
+ ============================================================================
+ */
+
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <inttypes.h>
+
+#ifdef __GNUC__
+#include <dlfcn.h>
+#include "StackImplementation.h"
+#endif
+
+#include "ImageProcessing.h"
+#include "bmp.h"
+
+#define __ARG_NUM__ 3
+
+int main(int argc, char* argv[]) {
+
+	/* Arguments variables*/
+	int32_t option;
+
+	/* Stack variables */
+	NODE* top;
+	DATA topValue;
+	bool empty;
+
+	/* Function pointer array to ImageProcessing.h functions */
+	uint8_t* (*proccesingPtr[2])(char*) = {pixelsToBoolean, readMatrixFromFile};
+
+	/* Shared library function pointers */
+	void* handle;
+	void (*initS)(NODE**);
+	NODE* (*push)(NODE*, DATA);
+	NODE* (*pop)(NODE*, DATA*);
+	void (*dumpS)(NODE*);
+	bool (*isEmpty)(NODE*);
+	char* error;
+
+	/* Bitmap reader and file reader variables */
+	uint8_t* booleanMatrix;
+
+	if (argc != __ARG_NUM__)
+	{
+		printf("Enter input file path \n");
+		return EXIT_FAILURE;
+	}
+
+	option = strtol(argv[2], NULL, 10);
+
+	/* pixels to boolean matrix*/
+	booleanMatrix = (uint8_t*) malloc(MATRIX_WIDTH * MATRIX_HEIGHT);
+	booleanMatrix = (*proccesingPtr[option])(argv[1]);
+
+	if (booleanMatrix == NULL)
+	{
+		if (option == 0)
+			printf("Error! Can't open input bitmap file: %s\n", argv[1]);
+		if (option == 1)
+			printf("Error! Can't open input text file: %s\n", argv[1]);
+		return EXIT_FAILURE;
+	}
+
+	/* Dump matrix */
+	dumpMatrix(booleanMatrix);
+
+	/* initialization of shared library functions */
+	handle = dlopen("libstack_implementation.so", RTLD_LAZY);
+	if (handle == NULL)
+	{
+		fputs(dlerror(), stderr);
+		exit(1);
+	}
+
+	initS = dlsym(handle, "initStack");
+	push = dlsym(handle, "pushToStack");
+	pop = dlsym(handle, "popFromStack");
+	dumpS = dlsym(handle, "dumpStack");
+	isEmpty = dlsym(handle, "isStackEmpty");
+
+	if ((error = dlerror()) != NULL)
+	{
+		fputs(error, stderr);
+		exit(1);
+	}
+
+
+	/* Initialize stack */
+	(*initS)(&top);
+
+
+	/* Push to stack dummy data */
+	top = (*push)(top, 1);
+	top = (*push)(top, 2);
+	top = (*push)(top, 3);
+
+	/* Check if stack is empty */
+	empty = (*isEmpty)(top);
+	printf("\nStack empty (boolean): %d\n", empty);
+
+	/* Print stack */
+	printf("\nStack dump: \n");
+	(*dumpS)(top);
+
+	/* Pop first element from stack */
+	top = (*pop)(top, &topValue);
+
+	printf("\nPop from stack: %d\n", topValue);
+
+	/* Print stack */
+	printf("\nStack dump: \n");
+	(*dumpS)(top);
+
+	return EXIT_SUCCESS;
+}

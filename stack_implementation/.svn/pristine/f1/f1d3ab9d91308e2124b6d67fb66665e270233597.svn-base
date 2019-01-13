@@ -1,0 +1,65 @@
+/*
+ * StackImplementation.c
+ *
+ *  Created on: Oct 19, 2018
+ *      Author: aleksa
+ */
+
+#include "StackImplementation.h"
+
+void initStack (NODE** stackTop)
+{
+	*stackTop = NULL;
+}
+
+NODE* pushToStack (NODE* stackTop, DATA iData)
+{
+
+	NODE* tmp = (NODE*) malloc(sizeof(NODE));
+	if (tmp == NULL)
+	{
+		printf("Error. Not enough memory!\n");
+		return NULL;
+	}
+
+	tmp->next = stackTop;
+	tmp->data = iData;
+
+	stackTop = tmp;
+
+	return stackTop;
+}
+
+NODE* popFromStack (NODE* stackTop, DATA* oData)
+{
+	NODE* newTop = stackTop->next;
+	*oData = stackTop->data;
+
+	free(stackTop);
+
+	return newTop;
+
+}
+
+bool isStackEmpty (NODE* stackTop)
+{
+	if (stackTop == NULL)
+	{
+		return true;
+	}
+
+	return false;
+}
+
+void dumpStack (NODE* stackTop)
+{
+
+	NODE* tmp = stackTop;
+
+	while (tmp != NULL)
+	{
+		printf("(%d, %d)\n", tmp->data.x_coord, tmp->data.y_coord);
+		tmp = tmp->next;
+	}
+
+}

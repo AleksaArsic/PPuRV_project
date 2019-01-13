@@ -1,0 +1,31 @@
+/*
+ * ImageProcessing.h
+ *
+ *  Created on: Oct 20, 2018
+ *      Author: aleksa
+ */
+
+#ifndef IMAGEPROCESSING_H_
+#define IMAGEPROCESSING_H_
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <inttypes.h>
+#include <stdbool.h>
+#include "bmp.h"
+
+/* File extensions */
+#define TXT_E "txt"
+#define BMP_E "bmp"
+
+/* Global variables representing matrix dimensions */
+extern uint32_t MATRIX_WIDTH;
+extern uint32_t MATRIX_HEIGHT;
+
+uint8_t* pixelsToBoolean (int8_t* filename);
+uint8_t* readMatrixFromFile (int8_t* filename);
+void dumpMatrix(uint8_t* matrix);
+bool checkFileExtension (int8_t* filename, int8_t* extension);
+void matrixDimensionsParser(int8_t* iWidth, int8_t* iHeight);
+
+#endif /* IMAGEPROCESSING_H_ */

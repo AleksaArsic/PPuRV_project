@@ -1,0 +1,69 @@
+/*
+ ============================================================================
+ Name        : ppurv_projekat.c
+ Author      : Aleksa Arsic
+ Version     :
+ Copyright   : Notice
+ Description : Hello World in C, Ansi-style
+ ============================================================================
+ */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <inttypes.h>
+#include "StackImplementation.h"
+#include "bmp.h"
+
+#define __ARG_NUM__ 2
+
+int main(int argc, char* argv[]) {
+
+	NODE* top;
+
+	BITMAPFILEHEADER bitmapFileHeader;
+	BITMAPINFOHEADER bitmapInfoHeader;
+	uint_least8_t* bitmapData;
+
+	if ( argc != __ARG_NUM__ )
+	{
+		printf("Enter input file path \n");
+		return EXIT_FAILURE;
+	}
+
+	bitmapData = LoadBitmapFile(argv[1],&bitmapFileHeader, &bitmapInfoHeader);
+	if(!bitmapData)
+	{
+		printf("Error! Can't open input bitmap file: %s\n", argv[1]);
+		return EXIT_FAILURE;
+	}
+
+	printf("Bitmap Loaded.\n");
+
+	/* Initialize stack */
+	initStack(&top);
+
+	/* Push to stack dummy data */
+	top = pushToStack(top, 1);
+	top = pushToStack(top, 2);
+	top = pushToStack(top, 3);
+
+	/* Check if stack is empty */
+	bool empty = isStackEmpty(top);
+	printf("Stack empty (boolean): %d\n", empty);
+
+	/* Print stack */
+	printf("Stack dump: \n");
+	dumpStack(top);
+
+	/* Pop from stack */
+	DATA topValue;
+	top = popFromStack(top, &topValue);
+
+	printf("\nPop from stack: %d\n", topValue);
+
+	/* Print stack */
+	printf("\nStack dump: \n");
+	dumpStack(top);
+
+	return EXIT_SUCCESS;
+}

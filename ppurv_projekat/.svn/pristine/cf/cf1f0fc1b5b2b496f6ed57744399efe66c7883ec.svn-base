@@ -1,0 +1,24 @@
+/*
+ * ImageProcessing.h
+ *
+ *  Created on: Oct 20, 2018
+ *      Author: aleksa
+ */
+
+#ifndef IMAGEPROCESSING_H_
+#define IMAGEPROCESSING_H_
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <inttypes.h>
+#include "bmp.h"
+
+#define MATRIX_WIDTH 16
+#define MATRIX_HEIGHT 16
+
+uint8_t* pixelsToBoolean (uint8_t* iData, int32_t iWidth, int32_t iHeight);
+uint8_t* readMatrixFromFile (char* filename);
+void dumpMatrix(uint8_t* matrix);
+
+
+#endif /* IMAGEPROCESSING_H_ */
